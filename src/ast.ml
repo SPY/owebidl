@@ -139,7 +139,9 @@ and primitive_type =
   | Byte
   | Octet
 
-and type_suffix = unit
+and type_suffix = suffix list
+
+and suffix = Array | Optional
 
 and optional = bool
 

@@ -1981,7 +1981,7 @@ let yyact = [|
     let _5 = (Parsing.peek_val __caml_parser_env 0 : 'null) in
     Obj.repr(
 # 480 "parser.mly"
-                                         ( Sequence (_3, _5), () )
+                                         ( Sequence (_3, _5), [] )
 # 1986 "parser.ml"
                : 'non_any_type))
 ; (fun __caml_parser_env ->
@@ -2126,34 +2126,34 @@ let yyact = [|
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 535 "parser.mly"
-                ()
+                ( [] )
 # 2131 "parser.ml"
                : 'type_suffix))
 ; (fun __caml_parser_env ->
     let _2 = (Parsing.peek_val __caml_parser_env 0 : 'type_suffix_starting_with_array) in
     Obj.repr(
 # 536 "parser.mly"
-                                             ()
+                                             ( Optional :: _2 )
 # 2138 "parser.ml"
                : 'type_suffix))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'type_suffix) in
     Obj.repr(
 # 537 "parser.mly"
-                                    ()
+                                    ( Array :: _3 )
 # 2145 "parser.ml"
                : 'type_suffix))
 ; (fun __caml_parser_env ->
     Obj.repr(
 # 541 "parser.mly"
-                ()
+                ( [] )
 # 2151 "parser.ml"
                : 'type_suffix_starting_with_array))
 ; (fun __caml_parser_env ->
     let _3 = (Parsing.peek_val __caml_parser_env 0 : 'type_suffix) in
     Obj.repr(
 # 542 "parser.mly"
-                                    ()
+                                    ( Array :: _3 )
 # 2158 "parser.ml"
                : 'type_suffix_starting_with_array))
 ; (fun __caml_parser_env ->

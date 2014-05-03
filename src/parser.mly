@@ -477,7 +477,7 @@ non_any_type:
     primitive_type type_suffix { Primitive $1, $2 }
   | DOMSTRING type_suffix { DomString, $2 }
   | IDENTIFIER type_suffix { Identifier $1, $2 }
-  | SEQUENCE LESS type_rule GREATER null { Sequence ($3, $5), () }
+  | SEQUENCE LESS type_rule GREATER null { Sequence ($3, $5), [] }
   | OBJECT type_suffix { Object, $2 }
   | DATE type_suffix { Date, $2 }
 ;
@@ -532,14 +532,14 @@ optional_long:
 ;
 
 type_suffix:
-    /* empty */ {}
-  | QUESTION type_suffix_starting_with_array {}
-  | LSBRACKET RSBRACKET type_suffix {}
+    /* empty */ { [] }
+  | QUESTION type_suffix_starting_with_array { Optional :: $2 }
+  | LSBRACKET RSBRACKET type_suffix { Array :: $3 }
 ;
 
 type_suffix_starting_with_array:
-    /* empty */ {}
-  | LSBRACKET RSBRACKET type_suffix {}
+    /* empty */ { [] }
+  | LSBRACKET RSBRACKET type_suffix { Array :: $3 }
 ;
 
 null:
