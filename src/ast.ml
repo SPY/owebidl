@@ -1,13 +1,13 @@
 type full_definition =
-  attribute list * definition
+  extended_attribute list * definition
 
-and attribute =
+and extended_attribute =
   AttributeDummy
 
 and definition =
   | Callback of callback
   | Interface of interface
-  | CallbackInterface of callback_interface
+  | CallbackInterface of interface
   | PartialInterface of partial_interface
   | PartialDictionary of partial_dictionary
   | Dictionary of dictionary
@@ -16,22 +16,73 @@ and definition =
   | Typedef of typedef
   | ImplementsStatement of implements_statement
 
-and callback =
-  CallbackDummy
+and callback = {
+  identifier: string;
+  return_type: unit;
+  arguments: (extended_attribute list * argument) list;
+}
+
+and argument =
+  | OptionalArgument of optional_argument
+  | RestArgument of rest_argument
+  | RequiredArgument of required_argument
+
+and optional_argument = {
+  default_value: string option;
+  argtype: unit;
+  name: identifier;
+}
+
+and rest_argument = {
+  name: identifier;
+  argtype: unit;
+}
+
+and required_argument = {
+  name: identifier;
+  argtype: unit;
+}
 
 and interface = {
-  members: (attribute list * interface_member) list;
+  identifier: string;
+  members: (extended_attribute list * interface_member) list;
   inheritance: identifier option;
 }
 
 and interface_member =   
   | ConstInterfaceMember 
-  | InterfaceAttribute
-  | InterfaceOperation
+  | InterfaceAttribute of attribute
+  | InterfaceOperation of operation
   | Stringifier
 
-and partial_interface =
-  | InterfacePartial
+and attribute = {
+  inherited: bool;
+  readonly: bool;
+  identifier: identifier;
+  attrtype: unit;
+}
+
+and operation = {
+  identifier: identifier option;
+  qualifiers: qualifier;
+  arguments: (extended_attribute list * argument) list;
+}
+
+and qualifier =
+  | Static
+  | Specials of special list
+
+and special =
+  | Getter
+  | Setter
+  | Creator
+  | Deleter
+  | LegacyCaller
+
+and partial_interface = {
+  identifier: string;
+  members: (extended_attribute list * interface_member) list;
+}
 
 and callback_interface =
   | InterfaceCallback
@@ -45,8 +96,10 @@ and partial_dictionary =
 and exception_definition =
   ExceptionDummy
 
-and enum =
-  EnumDummy
+and enum = {
+  identifier: string;
+  members: string list;
+}
 
 and typedef =
   TypedefDummy

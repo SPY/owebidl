@@ -87,24 +87,24 @@ definition:
   | partial { $1 }
   | dictionary { $1 }
   | exception_rule { $1 } 
-  | enum { $1 }
+  | enum { Enum $1 }
   | typedef { $1 }
   | implements_statement { $1 }
 ;
 
 callback_or_interface:
     CALLBACK callback_rest_or_interface { $2 }
-  | interface { $1 }
+  | interface { Interface $1 }
 ;
 
 callback_rest_or_interface:
-    callback_rest { Callback CallbackDummy }
-  | interface { CallbackInterface InterfaceCallback }
+    callback_rest { Callback $1 }
+  | interface { CallbackInterface $1 }
 ;
 
 interface:
   INTERFACE IDENTIFIER inheritance LBRACE interface_members RBRACE SEMI {
-    Interface { members = $5; inheritance = $3 }
+    { identifier = $2; members = $5; inheritance = $3 }
   }
 ;
 
@@ -113,13 +113,13 @@ partial:
 ;
 
 partial_definition:
-    partial_interface { $1 }
+    partial_interface { PartialInterface $1 }
   | partial_dictionary { $1 }
 ;
 
 partial_interface:
   INTERFACE IDENTIFIER LBRACE interface_members RBRACE SEMI {
-    PartialInterface InterfacePartial
+    { identifier = $2; members = $4 }
   }
 ;
 
@@ -159,9 +159,10 @@ default:
   | EQUAL default_value { Some $2 }
 ;
 
+/* todo */
 default_value:
-    const_value {}
-  | STRING {}
+    const_value { "" }
+  | STRING { $1 }
 ;
 
 exception_rule:
@@ -182,7 +183,7 @@ inheritance:
 
 enum:
   ENUM IDENTIFIER LBRACE enum_value_list RBRACE SEMI {
-    Enum EnumDummy
+    { identifier = $2; members = $4 }
   }
 ;
 
@@ -197,7 +198,7 @@ enum_values:
 
 callback_rest:
   IDENTIFIER EQUAL return_type LRBRACKET argument_list RRBRACKET SEMI {
-    Callback CallbackDummy
+    { identifier = $1; return_type = (); arguments = $5 }
   }
 ;
 
@@ -238,8 +239,8 @@ float_literal:
 
 attribute_or_operation:
     STRINGIFIER stringifier_attribute_or_operation { Stringifier }
-  | attribute { InterfaceAttribute }
-  | operation { InterfaceOperation }
+  | attribute { InterfaceAttribute $1 }
+  | operation { InterfaceOperation $1 }
 ;
 
 stringifier_attribute_or_operation:
@@ -249,12 +250,14 @@ stringifier_attribute_or_operation:
 ;
 
 attribute:
-  inherit_rule read_only ATTRIBUTE type_rule IDENTIFIER SEMI { }
+  inherit_rule read_only ATTRIBUTE type_rule IDENTIFIER SEMI {
+    { inherited = $1; readonly = $2; attrtype = $4; identifier = $5 }
+  }
 ;
 
 inherit_rule:
-    /* empty */ { true }
-  | INHERIT { false }
+    /* empty */ { false }
+  | INHERIT { true }
 ;
 
 read_only:
@@ -263,12 +266,14 @@ read_only:
 ;
 
 operation:
-  qualifiers operation_rest {}
+  qualifiers operation_rest {
+    { $2 with qualifiers = $1 }
+  }
 ;
 
 qualifiers:
-    STATIC {}
-  | specials {}
+    STATIC { Static }
+  | specials { Specials $1 }
 ;
 
 specials: 
@@ -277,15 +282,17 @@ specials:
 ;
 
 special:
-    GETTER {}
-  | SETTER {}
-  | CREATOR {}
-  | DELETER {}
-  | LEGACYCALLER {}
+    GETTER { Getter }
+  | SETTER { Setter }
+  | CREATOR { Creator }
+  | DELETER { Deleter }
+  | LEGACYCALLER { LegacyCaller }
 ;
 
 operation_rest:
-  return_type optional_identifier LRBRACKET argument_list RRBRACKET SEMI {}
+  return_type optional_identifier LRBRACKET argument_list RRBRACKET SEMI {
+    { identifier = $2; qualifiers = Static; arguments = $4 }
+  }
 ;
 
 optional_identifier:
@@ -304,22 +311,34 @@ arguments:
 ;
 
 argument:
-  extended_attribute_list optional_or_required_argument {}
+  extended_attribute_list optional_or_required_argument {
+    ($1, $2)
+  }
 ;
 
 optional_or_required_argument:
-    OPTIONAL type_rule argument_name default {}
-  | type_rule ellipsis argument_name {}
+    OPTIONAL type_rule argument_name default {
+      OptionalArgument {
+        default_value = $4;
+        argtype = $2;
+        name = $3;
+      }
+             }
+  | type_rule ellipsis argument_name {
+      if $2
+      then RestArgument { name = $3; argtype = $1 }
+      else RequiredArgument { name = $3; argtype = $1 }
+    }
 ;
 
 argument_name:
-    argument_name_keyword {}
-  | IDENTIFIER {}
+    argument_name_keyword { $1 }
+  | IDENTIFIER { $1 }
 ;
 
 ellipsis:
-    /* empty */ {}
-  | ELLIPSIS {}
+    /* empty */ { true }
+  | ELLIPSIS { false }
 ;
 
 exception_member:
@@ -400,25 +419,25 @@ other:
 ;
 
 argument_name_keyword:
-    ATTRIBUTE {}
-  | CALLBACK {}
-  | CONST {}
-  | CREATOR {}
-  | DELETER {}
-  | DICTIONARY {}
-  | ENUM {}
-  | EXCEPTION {}
-  | GETTER {}
-  | IMPLEMENTS {}
-  | INHERIT {}
-  | INTERFACE {}
-  | LEGACYCALLER {}
-  | PARTIAL {}
-  | SETTER {}
-  | STATIC {}
-  | STRINGIFIER {}
-  | TYPEDEF {}
-  | UNRESTRICTED {}
+    ATTRIBUTE { "attribute" }
+  | CALLBACK { "callback" }
+  | CONST { "const" }
+  | CREATOR { "creator" }
+  | DELETER { "deleter" }
+  | DICTIONARY { "dictionary" }
+  | ENUM { "enum" }
+  | EXCEPTION { "exception" }
+  | GETTER { "getter" }
+  | IMPLEMENTS { "implements" }
+  | INHERIT { "inherit" }
+  | INTERFACE { "interface" }
+  | LEGACYCALLER { "legacycaller" }
+  | PARTIAL { "partial" }
+  | SETTER { "setter" }
+  | STATIC { "static" }
+  | STRINGIFIER { "strinifier" }
+  | TYPEDEF { "typedef" }
+  | UNRESTRICTED { "unrestricted" }
 ;
 
 other_or_comma:
@@ -427,8 +446,8 @@ other_or_comma:
 ;
 
 type_rule:
-    single_type {}
-  | union_type type_suffix {}
+    single_type { () }
+  | union_type type_suffix { () }
 ;
 
 single_type:
