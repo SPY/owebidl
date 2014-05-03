@@ -1,4 +1,4 @@
-all: lexer parser
+all: lexer parser binary
 
 lexer:
 	cd src && \
@@ -13,3 +13,8 @@ parser: ast
 	ocamlyacc parser.mly && \
 	ocamlc -c parser.mli && \
 	ocamlc -c parser.ml
+
+binary:
+	cd src && \
+	ocamlc -c webidl.ml && \
+	ocamlc -o ../bin/webidl lexer.cmo parser.cmo webidl.cmo
