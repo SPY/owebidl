@@ -18,7 +18,7 @@ and definition =
 
 and callback = {
   identifier: string;
-  return_type: unit;
+  return_type: return_type;
   arguments: (extended_attribute list * argument) list;
 }
 
@@ -28,7 +28,7 @@ and argument =
   | RequiredArgument of required_argument
 
 and optional_argument = {
-  default_value: string option;
+  default_value: const_value option;
   argtype: type_description;
   name: identifier;
 }
@@ -50,10 +50,16 @@ and interface = {
 }
 
 and interface_member =   
-  | ConstInterfaceMember 
+  | ConstInterfaceMember of const_member
   | InterfaceAttribute of attribute
   | InterfaceOperation of operation
   | Stringifier
+
+and const_member = {
+  const_type: const_type;
+  identifier: identifier;
+  value: const_value;
+}
 
 and attribute = {
   inherited: bool;
@@ -63,6 +69,7 @@ and attribute = {
 }
 
 and operation = {
+  return_type: return_type;
   identifier: identifier option;
   qualifiers: qualifier;
   arguments: (extended_attribute list * argument) list;
@@ -148,3 +155,21 @@ and optional = bool
 and const_type =
   | PrimitiveType of primitive_type * optional
   | UserType of identifier * optional
+
+and return_type = 
+  | Void
+  | NonVoid of type_description
+
+and const_value =
+  | True
+  | False
+  | FloatLiteral of float_literal
+  | Integer of int
+  | Null
+  | String of string
+
+and float_literal =
+  | FloatValue of float
+  | MinusInfinity
+  | Infinity
+  | NaN

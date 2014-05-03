@@ -159,10 +159,9 @@ default:
   | EQUAL default_value { Some $2 }
 ;
 
-/* todo */
 default_value:
-    const_value { "" }
-  | STRING { $1 }
+    const_value { $1 }
+  | STRING { String $1 }
 ;
 
 exception_rule:
@@ -198,7 +197,7 @@ enum_values:
 
 callback_rest:
   IDENTIFIER EQUAL return_type LRBRACKET argument_list RRBRACKET SEMI {
-    { identifier = $1; return_type = (); arguments = $5 }
+    { identifier = $1; return_type = $3; arguments = $5 }
   }
 ;
 
@@ -215,26 +214,32 @@ implements_statement:
 ;
 
 const:
-  CONST const_type IDENTIFIER EQUAL const_value SEMI { ConstInterfaceMember }
+  CONST const_type IDENTIFIER EQUAL const_value SEMI {
+    ConstInterfaceMember {
+      const_type = $2;
+      identifier = $3;
+      value = $5;
+    }
+  }
 ;
 
 const_value:
-    boolean_literal {}
-  | float_literal {}
-  | INTEGER {}
-  | NULL {}
+    boolean_literal { $1 }
+  | float_literal { FloatLiteral $1 }
+  | INTEGER { Integer $1 }
+  | NULL { Null }
 ;
 
 boolean_literal:
-    TRUE { }
-  | FALSE { }
+    TRUE { True }
+  | FALSE { False }
 ;
 
 float_literal:
-    FLOAT {}
-  | MINUS INFINITY {}
-  | INFINITY {}
-  | NAN {}
+    FLOAT { FloatValue $1 }
+  | MINUS INFINITY { MinusInfinity }
+  | INFINITY { Infinity }
+  | NAN { NaN }
 ;
 
 attribute_or_operation:
@@ -291,7 +296,7 @@ special:
 
 operation_rest:
   return_type optional_identifier LRBRACKET argument_list RRBRACKET SEMI {
-    { identifier = $2; qualifiers = Static; arguments = $4 }
+    { return_type = $1; identifier = $2; qualifiers = Static; arguments = $4 }
   }
 ;
 
@@ -548,8 +553,8 @@ null:
 ;
 
 return_type:
-    type_rule { }
-  | VOID {}
+    type_rule { NonVoid $1 }
+  | VOID { Void }
 ;
 
 extended_attribute_no_args:
