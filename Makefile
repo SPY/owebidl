@@ -1,8 +1,9 @@
 all: lexer parser
 
 lexer:
-	ocamllex src/lexer.mll
-	ocamlc -c src/lexer.ml
+	cd src && \
+	ocamllex lexer.mll && \
+	ocamlc -c lexer.ml
 
 ast:
 	ocamlc -c -w -30 src/ast.ml
