@@ -85,7 +85,7 @@ definitions:
 definition:
     callback_or_interface { $1 }
   | partial { $1 }
-  | dictionary { $1 }
+  | dictionary { Dictionary $1 }
   | exception_rule { $1 } 
   | enum { Enum $1 }
   | typedef { $1 }
@@ -114,7 +114,7 @@ partial:
 
 partial_definition:
     partial_interface { PartialInterface $1 }
-  | partial_dictionary { $1 }
+  | partial_dictionary { PartialDictionary $1 }
 ;
 
 partial_interface:
@@ -135,7 +135,7 @@ interface_member:
 
 dictionary:
   DICTIONARY IDENTIFIER inheritance LBRACE dictionary_members RBRACE SEMI {
-    Dictionary DictionaryDummy
+    DictionaryDummy
   }
 ;
 
@@ -150,7 +150,7 @@ dictionary_member:
 
 partial_dictionary:
   DICTIONARY IDENTIFIER LBRACE dictionary_members RBRACE {
-    PartialDictionary DictionaryPartial
+    DictionaryPartial
   }
 ;
 
@@ -446,24 +446,26 @@ other_or_comma:
 ;
 
 type_rule:
-    single_type { () }
-  | union_type type_suffix { () }
+    single_type { $1 }
+  | union_type type_suffix { (UnionType $1), $2 }
 ;
 
 single_type:
-    non_any_type {}
-  | ANY LSBRACKET RSBRACKET type_suffix {}
+    non_any_type { $1 }
+  | ANY LSBRACKET RSBRACKET type_suffix { AnyArray, $4 }
 ;
 
 union_type:
-    /* empty */ {}
-  | LRBRACKET union_member_type OR union_member_type union_member_types RRBRACKET {}
+    /* empty */ { [] }
+  | LRBRACKET union_member_type OR union_member_type union_member_types RRBRACKET {
+    $2 :: $4 :: $5
+  }
 ;
 
 union_member_type:
-    non_any_type {}
-  | union_type type_suffix {}
-  | ANY LSBRACKET RSBRACKET type_suffix {}
+    non_any_type { $1 }
+  | union_type type_suffix { UnionType $1, $2 }
+  | ANY LSBRACKET RSBRACKET type_suffix { AnyArray, $4 }
 ;
 
 union_member_types:
@@ -472,40 +474,51 @@ union_member_types:
 ;
 
 non_any_type:
-    primitive_type type_suffix {}
-  | DOMSTRING type_suffix {}
-  | IDENTIFIER type_suffix {}
-  | SEQUENCE LESS type_rule GREATER null {}
-  | OBJECT type_suffix {}
-  | DATE type_suffix {}
+    primitive_type type_suffix { Primitive $1, $2 }
+  | DOMSTRING type_suffix { DomString, $2 }
+  | IDENTIFIER type_suffix { Identifier $1, $2 }
+  | SEQUENCE LESS type_rule GREATER null { Sequence ($3, $5), () }
+  | OBJECT type_suffix { Object, $2 }
+  | DATE type_suffix { Date, $2 }
 ;
 
 const_type:
-    primitive_type null {}
-  | IDENTIFIER null {}
+    primitive_type null { PrimitiveType ($1, $2) }
+  | IDENTIFIER null { UserType ($1, $2) }
 ;
 
 primitive_type:
-    unsigned_integer_type {}
-  | unrestricted_float_type {}
-  | BOOLEAN {}
-  | BYTE {}
-  | OCTET {}
+    unsigned_integer_type { $1 }
+  | unrestricted_float_type { $1 }
+  | BOOLEAN { Boolean }
+  | BYTE { Byte }
+  | OCTET { Octet }
 ;
 
 unrestricted_float_type:
-    UNRESTRICTED float_type {}
-  | float_type {}
+    UNRESTRICTED float_type {
+      match $2 with
+      | Float -> UFloat
+      | Double -> UDouble
+      | _ -> failwith "not float type"
+    }
+  | float_type { $1 }
 ;
 
 float_type:
-    FLOAT {}
-  | DOUBLE {}
+    FLOAT { Float }
+  | DOUBLE { Double }
 ;
 
 unsigned_integer_type:
-    UNSIGNED integer_type {}
-  | integer_type {}
+    UNSIGNED integer_type {
+      match $2 with
+      | Short -> UShort
+      | Long -> ULong
+      | LongLong -> ULongLong
+      | _ -> failwith "not integer type"
+    }
+  | integer_type { $1 }
 ;
 
 integer_type:

@@ -29,18 +29,18 @@ and argument =
 
 and optional_argument = {
   default_value: string option;
-  argtype: unit;
+  argtype: type_description;
   name: identifier;
 }
 
 and rest_argument = {
   name: identifier;
-  argtype: unit;
+  argtype: type_description;
 }
 
 and required_argument = {
   name: identifier;
-  argtype: unit;
+  argtype: type_description;
 }
 
 and interface = {
@@ -59,7 +59,7 @@ and attribute = {
   inherited: bool;
   readonly: bool;
   identifier: identifier;
-  attrtype: unit;
+  attrtype: type_description;
 }
 
 and operation = {
@@ -112,7 +112,37 @@ and identifier = string
 and extended_attribute_list =
   ExtendedAttributeList
 
-and integer_type =
+and type_description = concrete_type * type_suffix
+
+and concrete_type =
+  | AnyArray
+  | DomString
+  | Identifier of identifier
+  | UnionType of type_description list
+  | Object
+  | Date
+  | Primitive of primitive_type
+  | Sequence of type_description * optional (* TODO: can't has type_suffix *)
+
+and primitive_type =
+  | UShort
+  | ULong
+  | ULongLong
   | Short
   | Long
   | LongLong
+  | Float
+  | Double
+  | UFloat
+  | UDouble
+  | Boolean
+  | Byte
+  | Octet
+
+and type_suffix = unit
+
+and optional = bool
+
+and const_type =
+  | PrimitiveType of primitive_type * optional
+  | UserType of identifier * optional
