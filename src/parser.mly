@@ -86,10 +86,10 @@ definition:
     callback_or_interface { $1 }
   | partial { $1 }
   | dictionary { Dictionary $1 }
-  | exception_rule { $1 } 
+  | exception_rule { ExceptionDef $1 } 
   | enum { Enum $1 }
-  | typedef { $1 }
-  | implements_statement { $1 }
+  | typedef { Typedef $1 }
+  | implements_statement { ImplementsStatement $1 }
 ;
 
 callback_or_interface:
@@ -129,13 +129,13 @@ interface_members:
 ;
 
 interface_member:
-    const { $1 }
+    const { ConstInterfaceMember $1 }
   | attribute_or_operation { $1 }
 ;
 
 dictionary:
   DICTIONARY IDENTIFIER inheritance LBRACE dictionary_members RBRACE SEMI {
-    DictionaryDummy
+    { identifier = $2; inheritance = $3; members = $5 }
   }
 ;
 
@@ -145,12 +145,14 @@ dictionary_members:
 ;
 
 dictionary_member:
-  type_rule IDENTIFIER default SEMI { }
+  type_rule IDENTIFIER default SEMI {
+    { identifier = $2; member_type = $1; default_value = $3 }
+  }
 ;
 
 partial_dictionary:
   DICTIONARY IDENTIFIER LBRACE dictionary_members RBRACE {
-    DictionaryPartial
+    { identifier = $2; members = $4 }
   }
 ;
 
@@ -166,7 +168,7 @@ default_value:
 
 exception_rule:
   EXCEPTION IDENTIFIER inheritance LBRACE exception_members RBRACE SEMI {
-    ExceptionDef ExceptionDummy
+    { identifier = $2; inheritance = $3; members = $5 }
   }
 ;
 
@@ -203,23 +205,19 @@ callback_rest:
 
 typedef:
   TYPEDEF extended_attribute_list type_rule IDENTIFIER SEMI {
-    Typedef TypedefDummy
+    { attributes = $2; aliased_type = $3; identifier = $4 }
   }
 ;
 
 implements_statement:
   IDENTIFIER IMPLEMENTS IDENTIFIER SEMI {
-    ImplementsStatement ImplementsStatementDummy
+    { child = $1; parent = $3 }
   }
 ;
 
 const:
   CONST const_type IDENTIFIER EQUAL const_value SEMI {
-    ConstInterfaceMember {
-      const_type = $2;
-      identifier = $3;
-      value = $5;
-    }
+    { const_type = $2; identifier = $3; value = $5; }
   }
 ;
 
@@ -347,12 +345,14 @@ ellipsis:
 ;
 
 exception_member:
-    const {}
-  | exception_field {}
+    const { ConstExceptionMember $1 }
+  | exception_field { ExceptionField $1 }
 ;
 
 exception_field:
-  type_rule IDENTIFIER SEMI {}
+  type_rule IDENTIFIER SEMI {
+    { identifier = $2; exception_type = $1 }
+  }
 ;
 
 extended_attribute_list:

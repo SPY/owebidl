@@ -94,25 +94,53 @@ and partial_interface = {
 and callback_interface =
   | InterfaceCallback
 
-and dictionary =
-  | DictionaryDummy
+and dictionary = {
+  identifier: identifier;
+  inheritance: identifier option;
+  members: (extended_attribute list * dictionary_member) list;
+}
 
-and partial_dictionary =
-  | DictionaryPartial
+and dictionary_member = {
+  member_type: type_description;
+  identifier: identifier;
+  default_value: const_value option;
+}
 
-and exception_definition =
-  ExceptionDummy
+and partial_dictionary = {
+  identifier: identifier;
+  members: (extended_attribute list * dictionary_member) list
+}
+
+and exception_definition = {
+  identifier: identifier;
+  inheritance: identifier option;
+  members: (extended_attribute list * exception_member) list;
+}
+
+and exception_member =
+  | ConstExceptionMember of const_member
+  | ExceptionField of exception_field
+
+and exception_field = {
+  identifier: identifier;
+  exception_type: type_description;
+}
 
 and enum = {
   identifier: string;
   members: string list;
 }
 
-and typedef =
-  TypedefDummy
+and typedef = {
+  attributes: extended_attribute list;
+  aliased_type: type_description;
+  identifier: identifier;
+}
 
-and implements_statement =
-  ImplementsStatementDummy
+and implements_statement = {
+  child: identifier;
+  parent: identifier;
+}
 
 and identifier = string
 

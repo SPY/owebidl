@@ -5,7 +5,7 @@ lexer:
 	ocamlc -c src/lexer.ml
 
 ast:
-	ocamlc -c src/ast.ml
+	ocamlc -c -w -30 src/ast.ml
 
 parser: ast
 	cd src && \
