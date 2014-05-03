@@ -1,3 +1,9 @@
+%{
+
+open Ast
+
+%}
+
 /* declarations */
 
 %token EOF
@@ -62,83 +68,95 @@
 %token UNSIGNED
 %token VOID
 %token UNRESTRICTED
+%token STATIC
+
+%start definitions
+%type <Ast.full_definition list> definitions
 
 %%
 
 /* rules */
 
 definitions:
-    extended_attribute_list definition definitions { $1, $2 :: $3 }
+    extended_attribute_list definition definitions { ($1, $2) :: $3 }
   | EOF { [] }
 ;
 
 definition:
-    callback_or_interface {}
-  | partial {}
-  | dictionary {}
-  | exception {} 
-  | enum {}
-  | typedef {}
-  | implements_statement {}
+    callback_or_interface { $1 }
+  | partial { $1 }
+  | dictionary { $1 }
+  | exception_rule { $1 } 
+  | enum { $1 }
+  | typedef { $1 }
+  | implements_statement { $1 }
 ;
 
 callback_or_interface:
-    CALLBACK callback_rest_or_interface {}
-  | interface {}
+    CALLBACK callback_rest_or_interface { $2 }
+  | interface { $1 }
 ;
 
 callback_rest_or_interface:
-    callback_rest {}
-  | interface {}
+    callback_rest { Callback CallbackDummy }
+  | interface { CallbackInterface InterfaceCallback }
 ;
 
 interface:
-  INTERFACE IDENTIFIER inheritance LBRACE interface_members RBRACE SEMI {}
+  INTERFACE IDENTIFIER inheritance LBRACE interface_members RBRACE SEMI {
+    Interface { members = $5; inheritance = $3 }
+  }
 ;
 
 partial:
-  PARTIAL partial_definition {}
+  PARTIAL partial_definition { $2 }
 ;
 
 partial_definition:
-    partial_interface {}
-  | partial_dictionary {}
+    partial_interface { $1 }
+  | partial_dictionary { $1 }
 ;
 
 partial_interface:
-  INTERFACE IDENTIFIER LBRACE interface_members RBRACE SEMI {}
+  INTERFACE IDENTIFIER LBRACE interface_members RBRACE SEMI {
+    PartialInterface InterfacePartial
+  }
 ;
 
 interface_members:
     /* empty */ { [] }
-  | extended_attribute_list interface_member interface_members {}
+  | extended_attribute_list interface_member interface_members { ($1, $2) :: $3 }
 ;
 
 interface_member:
-    const {}
-  | attribute_or_operator {}
+    const { $1 }
+  | attribute_or_operation { $1 }
 ;
 
 dictionary:
-  DICTIONARY IDENTIFIER inheritance LBRACE dictionary_members RBRACE SEMI {}
+  DICTIONARY IDENTIFIER inheritance LBRACE dictionary_members RBRACE SEMI {
+    Dictionary DictionaryDummy
+  }
 ;
 
 dictionary_members:
     /* empty */ { [] }
-  | extended_attribute_list dictionary_member dictionary_members {}
+  | extended_attribute_list dictionary_member dictionary_members { ($1, $2) :: $3 }
 ;
 
 dictionary_member:
-  type IDENTIFIER default SEMI {}
+  type_rule IDENTIFIER default SEMI { }
 ;
 
 partial_dictionary:
-  DICTIONARY IDENTIFIER LBRACE dictionary_members RBRACE {}
+  DICTIONARY IDENTIFIER LBRACE dictionary_members RBRACE {
+    PartialDictionary DictionaryPartial
+  }
 ;
 
 default:
     /* empty */ { None }
-  | EQUAL defalut_value { Some $2 }
+  | EQUAL default_value { Some $2 }
 ;
 
 default_value:
@@ -146,13 +164,15 @@ default_value:
   | STRING {}
 ;
 
-exception:
-  EXCEPTION IDENTIFIER inheritance LBRACE exception_members RBRACE SEMI {}
+exception_rule:
+  EXCEPTION IDENTIFIER inheritance LBRACE exception_members RBRACE SEMI {
+    ExceptionDef ExceptionDummy
+  }
 ;
 
 exception_members:
     /* empty */ { [] }
-  | extended_attribute_list exception_member exception_members {}
+  | extended_attribute_list exception_member exception_members { ($1, $2) :: $3 }
 ;
 
 inheritance:
@@ -161,7 +181,9 @@ inheritance:
 ;
 
 enum:
-  ENUM IDENTIFIER LBRACE enum_value_list RBRACE SEMI {}
+  ENUM IDENTIFIER LBRACE enum_value_list RBRACE SEMI {
+    Enum EnumDummy
+  }
 ;
 
 enum_value_list:
@@ -174,19 +196,25 @@ enum_values:
 ;
 
 callback_rest:
-  IDENTIFIER EQUAL return_type LRBRACKET argument_list RRBRACKET SEMI {}
+  IDENTIFIER EQUAL return_type LRBRACKET argument_list RRBRACKET SEMI {
+    Callback CallbackDummy
+  }
 ;
 
 typedef:
-  TYPEDEF extended_attribute_list type IDENTIFIER SEMI {}
+  TYPEDEF extended_attribute_list type_rule IDENTIFIER SEMI {
+    Typedef TypedefDummy
+  }
 ;
 
 implements_statement:
-  IDENTIFIER IMPLEMENTS IDENTIFIER SEMI {}
+  IDENTIFIER IMPLEMENTS IDENTIFIER SEMI {
+    ImplementsStatement ImplementsStatementDummy
+  }
 ;
 
 const:
-  CONST const_type IDENTIFIER EQUAL const_value SEMI {}
+  CONST const_type IDENTIFIER EQUAL const_value SEMI { ConstInterfaceMember }
 ;
 
 const_value:
@@ -209,9 +237,9 @@ float_literal:
 ;
 
 attribute_or_operation:
-    STRINGIFIER stringifier_attribute_or_operation {}
-  | attribute {}
-  | operation {}
+    STRINGIFIER stringifier_attribute_or_operation { Stringifier }
+  | attribute { InterfaceAttribute }
+  | operation { InterfaceOperation }
 ;
 
 stringifier_attribute_or_operation:
@@ -221,10 +249,10 @@ stringifier_attribute_or_operation:
 ;
 
 attribute:
-  inherit read_only ATTRIBUTE type IDENTIFIER SEMI { }
+  inherit_rule read_only ATTRIBUTE type_rule IDENTIFIER SEMI { }
 ;
 
-inherit:
+inherit_rule:
     /* empty */ { true }
   | INHERIT { false }
 ;
@@ -245,7 +273,7 @@ qualifiers:
 
 specials: 
     /* empty */ { [] }
-  | special specails { $1 :: $2 }
+  | special specials { $1 :: $2 }
 ;
 
 special:
@@ -280,8 +308,8 @@ argument:
 ;
 
 optional_or_required_argument:
-    OPTIONAL type argument_name default {}
-  | type ellipsis argument_name {}
+    OPTIONAL type_rule argument_name default {}
+  | type_rule ellipsis argument_name {}
 ;
 
 argument_name:
@@ -300,12 +328,12 @@ exception_member:
 ;
 
 exception_field:
-  type IDENTIFIER SEMI {}
+  type_rule IDENTIFIER SEMI {}
 ;
 
 extended_attribute_list:
     /* empty */ { [] }
-  | LSBRACKET extended_attribute extended_attributes RSBRACKET { $2 :: $3 }
+  | LSBRACKET extended_attribute extended_attributes RSBRACKET { [] }
 ;
 
 extended_attributes:
@@ -327,10 +355,10 @@ extended_attribute_rest:
 
 extended_attribute_inner:
     /* empty */ { [] }
-  | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_inner {}
-  | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_inner {}
-  | LBRACE extended_attribute_inner RBRACE extended_attribute_inner {}
-  | other_or_comma extended_attribute_inner {}
+  | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_inner { [] }
+  | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_inner { [] }
+  | LBRACE extended_attribute_inner RBRACE extended_attribute_inner { [] }
+  | other_or_comma extended_attribute_inner { [] }
 ; 
 
 other:
@@ -398,7 +426,7 @@ other_or_comma:
   | COMMA {}
 ;
 
-type:
+type_rule:
     single_type {}
   | union_type type_suffix {}
 ;
@@ -428,7 +456,7 @@ non_any_type:
     primitive_type type_suffix {}
   | DOMSTRING type_suffix {}
   | IDENTIFIER type_suffix {}
-  | SEQUENCE LESS type GREATER null {}
+  | SEQUENCE LESS type_rule GREATER null {}
   | OBJECT type_suffix {}
   | DATE type_suffix {}
 ;
@@ -488,7 +516,7 @@ null:
 ;
 
 return_type:
-    type { }
+    type_rule { }
   | VOID {}
 ;
 
