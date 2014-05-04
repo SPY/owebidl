@@ -1,4 +1,4 @@
-all: lexer parser binary
+all: parser lexer binary
 
 lexer:
 	cd src && \
@@ -6,18 +6,21 @@ lexer:
 	ocamlc -c lexer.ml
 
 ast:
-	ocamlc -c -w -30 src/ast.ml
+	ocamlfind ocamlc -syntax camlp4o -package sexplib.syntax -c -w -30 src/ast.ml
+
+#$PARSER_GENERATOR=menhir
+$PARSER_GENERATOR=ocamlyacc
 
 parser: ast
 	cd src && \
-	ocamlyacc -v parser.mly && \
+	$($PARSER_GENERATOR) -v parser.mly && \
 	ocamlc -c parser.mli && \
 	ocamlc -c parser.ml
 
 binary:
 	cd src && \
-	ocamlc -c webidl.ml && \
-	ocamlc -o ../bin/webidl lexer.cmo parser.cmo webidl.cmo
+	ocamlfind ocamlc -package sexplib -c webidl.ml && \
+	ocamlfind ocamlc -package sexplib -linkpkg -o ../bin/webidl ast.cmo lexer.cmo parser.cmo webidl.cmo
 
 run:
 	OCAMLRUNPARAM='p' ./bin/webidl

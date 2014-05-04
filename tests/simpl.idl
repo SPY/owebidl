@@ -1,0 +1,6 @@
+interface EmptyInterface {
+};
+
+interface WithOneMember: EmptyInterface {
+  long add_numbers(long x, long y);
+};

@@ -64,4 +64,4 @@ type token =
   | STATIC
 
 val definitions :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ast.full_definition list
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Ast.definitions

@@ -1,4 +1,8 @@
-type full_definition =
+open Sexplib.Std
+
+type definitions = full_definition list
+
+and full_definition =
   extended_attribute list * definition
 
 and extended_attribute =
@@ -71,7 +75,7 @@ and attribute = {
 and operation = {
   return_type: return_type;
   identifier: identifier option;
-  qualifiers: qualifier;
+  qualifiers: qualifier option;
   arguments: (extended_attribute list * argument) list;
 }
 
@@ -201,3 +205,4 @@ and float_literal =
   | MinusInfinity
   | Infinity
   | NaN
+  with sexp_of

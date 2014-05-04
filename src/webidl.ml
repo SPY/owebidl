@@ -1,9 +1,11 @@
+module Sexp = Sexplib.Sexp
+
 let _ =
-  let fragment = "interface Foo : Bar { };" in
-  let lexbuf = Lexing.from_string fragment in
+  let lexbuf = Lexing.from_channel (open_in "tests/simpl.idl") in
   try
     let result = Parser.definitions Lexer.token lexbuf in
-    print_string "success parsing\n";
+    let str = Sexp.to_string (Ast.sexp_of_definitions result) in
+    print_endline str
   with exn ->
     begin
       let open Lexing in

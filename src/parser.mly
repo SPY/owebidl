@@ -71,7 +71,7 @@ open Ast
 %token STATIC
 
 %start definitions
-%type <Ast.full_definition list> definitions
+%type <Ast.definitions> definitions
 
 %%
 
@@ -275,8 +275,12 @@ operation:
 ;
 
 qualifiers:
-    STATIC { Static }
-  | specials { Specials $1 }
+    STATIC { Some Static }
+  | specials {
+      match $1 with
+      | [] -> None
+      | _ -> Some (Specials $1)
+    }
 ;
 
 specials: 
@@ -294,7 +298,7 @@ special:
 
 operation_rest:
   return_type optional_identifier LRBRACKET argument_list RRBRACKET SEMI {
-    { return_type = $1; identifier = $2; qualifiers = Static; arguments = $4 }
+    { return_type = $1; identifier = $2; qualifiers = None; arguments = $4 }
   }
 ;
 
@@ -340,8 +344,8 @@ argument_name:
 ;
 
 ellipsis:
-    /* empty */ { true }
-  | ELLIPSIS { false }
+    /* empty */ { false }
+  | ELLIPSIS { true }
 ;
 
 exception_member:
