@@ -4,3 +4,10 @@ interface EmptyInterface {
 interface WithOneMember: EmptyInterface {
   long add_numbers(long x, long y);
 };
+
+WithOneMember implements EmptyInterface;
+
+enum Props {
+  "Property1",
+  "Property2"
+};

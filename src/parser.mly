@@ -515,7 +515,7 @@ unrestricted_float_type:
 ;
 
 float_type:
-    FLOAT { Float }
+    FLOAT_TYPE { Float }
   | DOUBLE { Double }
 ;
 

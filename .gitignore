@@ -2,3 +2,6 @@
 *.cmi
 bin/
 src/parser.output
+src/parser.ml
+src/parser.mli
+src/lexer.ml
