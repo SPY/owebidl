@@ -72,6 +72,12 @@ open Ast
 
 %start definitions
 %type <Ast.definitions> definitions
+%type <Ast.definition> definition
+%type <Ast.interface> interface
+%type <Ast.partial_interface> partial_interface
+%type <Ast.dictionary> dictionary
+%type <Ast.partial_dictionary> partial_dictionary
+%type <Ast.exception_definition> exception_rule
 
 %%
 

@@ -47,9 +47,11 @@ and required_argument = {
   argtype: type_description;
 }
 
+and 'a members = (extended_attribute list * 'a) list
+
 and interface = {
   identifier: string;
-  members: (extended_attribute list * interface_member) list;
+  members: interface_member members;
   inheritance: identifier option;
 }
 
@@ -92,7 +94,7 @@ and special =
 
 and partial_interface = {
   identifier: string;
-  members: (extended_attribute list * interface_member) list;
+  members: interface_member members;
 }
 
 and callback_interface =

@@ -1,8 +1,10 @@
 interface EmptyInterface {
 };
 
-interface WithOneMember: EmptyInterface {
+interface WithMethodAndConst: EmptyInterface {
   long add_numbers(long x, long y);
+  long sum(long[] numbers);
+  const long? const_value = 100500;
 };
 
 WithOneMember implements EmptyInterface;

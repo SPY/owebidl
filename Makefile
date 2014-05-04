@@ -8,8 +8,8 @@ lexer:
 ast:
 	ocamlfind ocamlc -syntax camlp4o -package sexplib.syntax -c -w -30 src/ast.ml
 
-#$PARSER_GENERATOR=menhir
-$PARSER_GENERATOR=ocamlyacc
+$PARSER_GENERATOR=menhir --infer
+#$PARSER_GENERATOR=ocamlyacc
 
 parser: ast
 	cd src && \
