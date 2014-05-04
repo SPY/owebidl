@@ -74,14 +74,14 @@ let float =
     | (['0'-'9']+ ['E' 'e'] ['+' '-']? ['0'-'9']+)) as float_str
 
 let identifier =
-  (['a'-'z' 'A'-'Z' '_'] ['0'-'9' 'a'-'z' 'A'-'Z' '_']) as ident_str
+  (['a'-'z' 'A'-'Z' '_'] ['0'-'9' 'a'-'z' 'A'-'Z' '_']*) as ident_str
 
 let string = '"' ([^ '"']* as str) '"'
 
 let other = [^ '\t' '\n' '\r' '0'-'9' 'A'-'Z' 'a'-'z']
 
 let whitespace =
-  (['\t' '\n' '\r' ]+) | (['\t' '\n' '\r']* (("//" _* | ("/*" _* "*/")) ['\t' '\n' '\r']*)+)
+  (['\t' '\n' '\r' ' ']+) | (['\t' '\n' '\r']* (("//" _* | ("/*" _* "*/")) ['\t' '\n' '\r']*)+)
 
 rule token = parse
   | float { FLOAT (float_of_string float_str) } 

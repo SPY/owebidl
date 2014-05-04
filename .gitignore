@@ -1,3 +1,4 @@
 *.cmo
 *.cmi
 bin/
+src/parser.output

@@ -10,7 +10,7 @@ ast:
 
 parser: ast
 	cd src && \
-	ocamlyacc parser.mly && \
+	ocamlyacc -v parser.mly && \
 	ocamlc -c parser.mli && \
 	ocamlc -c parser.ml
 
@@ -18,3 +18,6 @@ binary:
 	cd src && \
 	ocamlc -c webidl.ml && \
 	ocamlc -o ../bin/webidl lexer.cmo parser.cmo webidl.cmo
+
+run:
+	OCAMLRUNPARAM='p' ./bin/webidl
