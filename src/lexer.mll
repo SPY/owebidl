@@ -80,8 +80,11 @@ let string = '"' ([^ '"']* as str) '"'
 
 let other = [^ '\t' '\n' '\r' '0'-'9' 'A'-'Z' 'a'-'z']
 
+let single_line_comment = "//" [^'\n']* '\n'
+let multi_line_comment = ("/*" _* "*/")
+
 let whitespace =
-  (['\t' '\n' '\r' ' ']+) | (['\t' '\n' '\r']* (("//" _* | ("/*" _* "*/")) ['\t' '\n' '\r']*)+)
+  (['\t' '\n' '\r' ' ']+) | (['\t' '\n' '\r']* ((single_line_comment | multi_line_comment) ['\t' '\n' '\r']*)+)
 
 rule token = parse
   | float { FLOAT (float_of_string float_str) } 

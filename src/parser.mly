@@ -78,14 +78,14 @@ open Ast
 %type <Ast.dictionary> dictionary
 %type <Ast.partial_dictionary> partial_dictionary
 %type <Ast.exception_definition> exception_rule
+%type <Ast.const_value> default_value
 
 %%
 
 /* rules */
 
 definitions:
-    extended_attribute_list definition definitions { ($1, $2) :: $3 }
-  | EOF { [] }
+  ds=list(pair(extended_attribute_list, definition)) EOF { ds }
 ;
 
 definition:
@@ -109,8 +109,8 @@ callback_rest_or_interface:
 ;
 
 interface:
-  INTERFACE IDENTIFIER inheritance LBRACE interface_members RBRACE SEMI {
-    { identifier = $2; members = $5; inheritance = $3 }
+  INTERFACE n=IDENTIFIER i=inheritance ms=members(interface_member) SEMI {
+    { identifier = n; members = ms; inheritance = i }
   }
 ;
 
@@ -124,14 +124,13 @@ partial_definition:
 ;
 
 partial_interface:
-  INTERFACE IDENTIFIER LBRACE interface_members RBRACE SEMI {
-    { identifier = $2; members = $4 }
+  INTERFACE n=IDENTIFIER ms=members(interface_member) SEMI {
+    { identifier = n; members = ms }
   }
 ;
 
-interface_members:
-    /* empty */ { [] }
-  | extended_attribute_list interface_member interface_members { ($1, $2) :: $3 }
+members(Member):
+  ms=delimited(LBRACE, list(pair(extended_attribute_list, Member)), RBRACE) { ms } 
 ;
 
 interface_member:
@@ -140,31 +139,25 @@ interface_member:
 ;
 
 dictionary:
-  DICTIONARY IDENTIFIER inheritance LBRACE dictionary_members RBRACE SEMI {
-    { identifier = $2; inheritance = $3; members = $5 }
+  DICTIONARY n=IDENTIFIER i=inheritance ms=members(dictionary_member) SEMI {
+    { identifier = n; inheritance = i; members = ms }
   }
 ;
 
-dictionary_members:
-    /* empty */ { [] }
-  | extended_attribute_list dictionary_member dictionary_members { ($1, $2) :: $3 }
-;
-
 dictionary_member:
-  type_rule IDENTIFIER default SEMI {
-    { identifier = $2; member_type = $1; default_value = $3 }
+  t=type_rule n=IDENTIFIER d=option(default) SEMI {
+    { identifier = n; member_type = t; default_value = d }
   }
 ;
 
 partial_dictionary:
-  DICTIONARY IDENTIFIER LBRACE dictionary_members RBRACE {
-    { identifier = $2; members = $4 }
+  DICTIONARY n=IDENTIFIER ms=members(dictionary_member) SEMI {
+    { identifier = n; members = ms }
   }
 ;
 
 default:
-    /* empty */ { None }
-  | EQUAL default_value { Some $2 }
+  | EQUAL default_value { $2 }
 ;
 
 default_value:
@@ -173,14 +166,9 @@ default_value:
 ;
 
 exception_rule:
-  EXCEPTION IDENTIFIER inheritance LBRACE exception_members RBRACE SEMI {
-    { identifier = $2; inheritance = $3; members = $5 }
+  EXCEPTION n=IDENTIFIER i=inheritance ms=members(exception_member) SEMI {
+    { identifier = n; inheritance = i; members = ms }
   }
-;
-
-exception_members:
-    /* empty */ { [] }
-  | extended_attribute_list exception_member exception_members { ($1, $2) :: $3 }
 ;
 
 inheritance:
@@ -189,23 +177,14 @@ inheritance:
 ;
 
 enum:
-  ENUM IDENTIFIER LBRACE enum_value_list RBRACE SEMI {
-    { identifier = $2; members = $4 }
+  ENUM n=IDENTIFIER ms=delimited(LBRACE, separated_list(COMMA, STRING), RBRACE) SEMI {
+    { identifier = n; members = ms }
   }
 ;
 
-enum_value_list:
-  STRING enum_values { $1 :: $2 }
-;
-
-enum_values:
-    /* empty */ { [] }
-  | COMMA STRING enum_values { $2 :: $3 }
-;
-
 callback_rest:
-  IDENTIFIER EQUAL return_type LRBRACKET argument_list RRBRACKET SEMI {
-    { identifier = $1; return_type = $3; arguments = $5 }
+  n=IDENTIFIER EQUAL t=return_type a=plist(argument) SEMI {
+    { identifier = n; return_type = t; arguments = a }
   }
 ;
 
@@ -259,8 +238,8 @@ stringifier_attribute_or_operation:
 ;
 
 attribute:
-  inherit_rule read_only ATTRIBUTE type_rule IDENTIFIER SEMI {
-    { inherited = $1; readonly = $2; attrtype = $4; identifier = $5 }
+  i=boption(INHERIT) r=boption(READONLY) ATTRIBUTE t=type_rule n=IDENTIFIER SEMI {
+    { inherited = i; readonly = r; attrtype = t; identifier = n }
   }
 ;
 
@@ -282,16 +261,11 @@ operation:
 
 qualifiers:
     STATIC { Some Static }
-  | specials {
-      match $1 with
+  | s=list(special) {
+      match s with
       | [] -> None
-      | _ -> Some (Specials $1)
+      | _ -> Some (Specials s)
     }
-;
-
-specials: 
-    /* empty */ { [] }
-  | special specials { $1 :: $2 }
 ;
 
 special:
@@ -303,25 +277,13 @@ special:
 ;
 
 operation_rest:
-  return_type optional_identifier LRBRACKET argument_list RRBRACKET SEMI {
-    { return_type = $1; identifier = $2; qualifiers = None; arguments = $4 }
+  t=return_type n=option(IDENTIFIER) a=plist(argument) SEMI {
+    { return_type = t; identifier = n; qualifiers = None; arguments = a }
   }
 ;
 
-optional_identifier:
-    /* empty */ { None }
-  | IDENTIFIER { Some $1 }
-;
-
-argument_list:
-    /* empty */ { [] }
-  | argument arguments { $1 :: $2 } 
-;
-
-arguments:
-    /* empty */ { [] }
-  | COMMA argument arguments { $2 :: $3 }
-;
+%inline plist(X):
+  args = delimited(LRBRACKET, separated_list(COMMA, X), RRBRACKET) { args }
 
 argument:
   extended_attribute_list optional_or_required_argument {
@@ -330,28 +292,23 @@ argument:
 ;
 
 optional_or_required_argument:
-    OPTIONAL type_rule argument_name default {
+    OPTIONAL t=type_rule n=argument_name d=option(default) {
       OptionalArgument {
-        default_value = $4;
-        argtype = $2;
-        name = $3;
+        default_value = d;
+        argtype = t;
+        name = n;
       }
              }
-  | type_rule ellipsis argument_name {
-      if $2
-      then RestArgument { name = $3; argtype = $1 }
-      else RequiredArgument { name = $3; argtype = $1 }
+  | t=type_rule e=boption(ELLIPSIS) n=argument_name {
+      if e
+      then RestArgument { name = n; argtype = t }
+      else RequiredArgument { name = n; argtype = t }
     }
 ;
 
 argument_name:
-    argument_name_keyword { $1 }
-  | IDENTIFIER { $1 }
-;
-
-ellipsis:
-    /* empty */ { false }
-  | ELLIPSIS { true }
+    n=argument_name_keyword { n }
+  | n=IDENTIFIER { n }
 ;
 
 exception_member:
@@ -433,7 +390,7 @@ other:
   | argument_name_keyword {}
 ;
 
-argument_name_keyword:
+%inline argument_name_keyword:
     ATTRIBUTE { "attribute" }
   | CALLBACK { "callback" }
   | CONST { "const" }
@@ -492,14 +449,14 @@ non_any_type:
     primitive_type type_suffix { Primitive $1, $2 }
   | DOMSTRING type_suffix { DomString, $2 }
   | IDENTIFIER type_suffix { Identifier $1, $2 }
-  | SEQUENCE LESS type_rule GREATER null { Sequence ($3, $5), [] }
+  | SEQUENCE LESS t=type_rule GREATER n=null { Sequence (t, n), [] }
   | OBJECT type_suffix { Object, $2 }
   | DATE type_suffix { Date, $2 }
 ;
 
 const_type:
-    primitive_type null { PrimitiveType ($1, $2) }
-  | IDENTIFIER null { UserType ($1, $2) }
+    t=primitive_type n=null { PrimitiveType (t, n) }
+  | i = IDENTIFIER n=null { UserType (i, n) }
 ;
 
 primitive_type:
@@ -557,30 +514,13 @@ type_suffix_starting_with_array:
   | LSBRACKET RSBRACKET type_suffix { Array :: $3 }
 ;
 
-null:
-    /* empty */ { false }
-  | QUESTION { true }
+%inline null:
+  n = boption(QUESTION) { n }
 ;
 
 return_type:
     type_rule { NonVoid $1 }
   | VOID { Void }
-;
-
-extended_attribute_no_args:
-  IDENTIFIER {}
-;
-
-extended_attribute_arg_list:
-  IDENTIFIER LRBRACKET argument_list RRBRACKET {}
-;
-
-extended_attribute_ident:
-  IDENTIFIER EQUAL IDENTIFIER {}
-;
-
-extended_attribute_named_arg_list:
-  IDENTIFIER EQUAL IDENTIFIER LSBRACKET argument_list RSBRACKET {}
 ;
 
 %%

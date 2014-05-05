@@ -13,3 +13,214 @@ enum Props {
   "Property1",
   "Property2"
 };
+
+interface btVector3 {
+  void btVector3();
+  void btVector3(float x, float y, float z);
+  float x();
+  float y();
+  float z();
+  void setX(float x);
+  void setY(float y);
+  void setZ(float z);
+  [Operator="*=", Ref] btVector3 op_mul(float x);
+};
+
+interface btVector4 {
+  void btVector4();
+  void btVector4(float x, float y, float z, float w);
+  float w();
+};
+btVector4 implements btVector3;
+
+interface btQuadWord {
+  float x();
+  float y();
+  float z();
+  float w();
+  void setX(float x);
+  void setY(float y);
+  void setZ(float z);
+  void setW(float w);
+};
+
+interface btQuaternion {
+  void btQuaternion(float x, float y, float z, float w);
+};
+btQuaternion implements btQuadWord;
+
+interface btMatrix3x3 {
+  void setEulerZYX(float ex, float ey, float ez);
+};
+
+interface btTransform {
+  void btTransform();
+  void btTransform([Ref] btQuaternion q, [Ref] btVector3 v);
+
+  void setIdentity();
+  void setOrigin([Ref] btVector3 origin);
+  void setRotation([Ref] btQuaternion rotation);
+  [Ref] btVector3 getOrigin();
+  [Value] btQuaternion getRotation();
+  [Ref] btMatrix3x3 getBasis();
+};
+
+interface btMotionState {
+  void getWorldTransform([Ref] btTransform worldTrans);
+  void setWorldTransform([Ref] btTransform worldTrans);
+};
+
+interface btDefaultMotionState {
+  void btDefaultMotionState([Ref] optional btTransform startTrans, [Ref] optional btTransform centerOfMassOffset);
+};
+btDefaultMotionState implements btMotionState;
+
+// Collision
+
+interface btCollisionObject {
+  [Ref] btTransform getWorldTransform();
+  void activate(optional boolean forceActivation);
+  boolean isActive();
+};
+
+[NoDelete]
+interface btCollisionObjectWrapper {
+};
+
+[Prefix="btCollisionWorld::"]
+interface RayResultCallback {
+  // abstract base class, no constructor
+  boolean hasHit();
+
+  [Const] attribute btCollisionObject m_collisionObject;
+};
+
+[Prefix="btCollisionWorld::"]
+interface ClosestRayResultCallback {
+  void ClosestRayResultCallback([Ref] btVector3 from, [Ref] btVector3 to);
+
+  [Value] attribute btVector3 m_rayToWorld;
+};
+ClosestRayResultCallback implements RayResultCallback;
+
+interface btManifoldPoint {
+};
+
+[Prefix="btCollisionWorld::"]
+interface ContactResultCallback {
+  float addSingleResult([Ref] btManifoldPoint cp, [Const] btCollisionObjectWrapper colObj0Wrap, long partId0, long index0, [Const] btCollisionObjectWrapper colObj1Wrap, long partId1, long index1);
+};
+
+[JSImplementation="ContactResultCallback"]
+interface ConcreteContactResultCallback {
+  void ConcreteContactResultCallback();
+  float addSingleResult([Ref] btManifoldPoint cp, [Const] btCollisionObjectWrapper colObj0Wrap, long partId0, long index0, [Const] btCollisionObjectWrapper colObj1Wrap, long partId1, long index1);
+};
+
+interface btCollisionShape {
+  void calculateLocalInertia(float mass, [Ref] btVector3 inertia);
+};
+
+interface btBoxShape {
+  void btBoxShape([Ref] btVector3 boxHalfExtents);
+};
+btBoxShape implements btCollisionShape;
+
+interface btCapsuleShape {
+  void btCapsuleShape(float radius, float height);
+};
+btCapsuleShape implements btCollisionShape;
+
+interface btSphereShape {
+  void btSphereShape(float radius);
+};
+btSphereShape implements btCollisionShape;
+
+interface btConeShape {
+  void btConeShape(float radius, float height);
+};
+btConeShape implements btCollisionShape;
+
+interface btDefaultCollisionConstructionInfo {
+  void btDefaultCollisionConstructionInfo();
+};
+
+interface btDefaultCollisionConfiguration {
+  void btDefaultCollisionConfiguration([Ref] optional btDefaultCollisionConstructionInfo info);
+};
+
+interface btDispatcher {
+};
+
+interface btCollisionDispatcher : btDispatcher {
+  void btCollisionDispatcher(btDefaultCollisionConfiguration conf);
+};
+
+interface btOverlappingPairCache {
+};
+
+interface btAxisSweep3 {
+  void btAxisSweep3([Ref] btVector3 worldAabbMin, [Ref] btVector3 worldAabbMax, optional long maxHandles, optional btOverlappingPairCache pairCache, optional boolean disableRaycastAccelerator);
+};
+
+interface btBroadphaseInterface {
+};
+
+interface btCollisionConfiguration {
+};
+
+interface btDbvtBroadphase {
+  void btDbvtBroadphase();
+};
+
+// Dynamics
+
+[Prefix="btRigidBody::"]
+interface btRigidBodyConstructionInfo {
+  void btRigidBodyConstructionInfo(float mass, btMotionState motionState, btCollisionShape collisionShape, [Ref] optional btVector3 localInertia);
+};
+
+interface btRigidBody {
+  void btRigidBody([Ref] btRigidBodyConstructionInfo constructionInfo);
+
+  btMotionState getMotionState();
+};
+btRigidBody implements btCollisionObject;
+
+interface btPoint2PointConstraint {
+  void btPoint2PointConstraint([Ref] btRigidBody rbA, [Ref] btRigidBody rbB, [Ref] btVector3 pivotInA, [Ref] btVector3 pivotInB);
+  void btPoint2PointConstraint([Ref] btRigidBody rbA, [Ref] btVector3 pivotInA);
+};
+
+interface btSequentialImpulseConstraintSolver {
+  void btSequentialImpulseConstraintSolver();
+};
+
+interface btTypedConstraint {
+};
+
+interface btConeTwistConstraint {
+  void btConeTwistConstraint([Ref] btRigidBody rbA, [Ref] btRigidBody rbB, [Ref] btTransform rbAFrame, [Ref] btTransform rbBFrame);
+  void btConeTwistConstraint([Ref] btRigidBody rbA, [Ref] btTransform rbAFrame);
+
+  void setLimit(long limitIndex, float limitValue);
+};
+btConeTwistConstraint implements btTypedConstraint;
+
+interface btConstraintSolver {
+};
+
+interface btDiscreteDynamicsWorld {
+  void btDiscreteDynamicsWorld(btDispatcher dispatcher, btBroadphaseInterface pairCache, btConstraintSolver constraintSolver, btCollisionConfiguration collisionConfiguration);
+
+  void setGravity([Ref] btVector3 gravity);
+  [Value] btVector3 getGravity();
+
+  void addRigidBody(btRigidBody body);
+  void addRigidBody(btRigidBody body, short group, short mask);
+
+  void addConstraint(btTypedConstraint constraint, optional boolean disableCollisionsBetweenLinkedBodies);
+  void removeConstraint(btTypedConstraint constraint);
+
+  long stepSimulation(float timeStep, optional long maxSubSteps, optional float fixedTimeStep);
+};
