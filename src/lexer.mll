@@ -81,7 +81,7 @@ let string = '"' ([^ '"']* as str) '"'
 let other = [^ '\t' '\n' '\r' '0'-'9' 'A'-'Z' 'a'-'z']
 
 let single_line_comment = "//" [^'\n']* '\n'
-let multi_line_comment = ("/*" _* "*/")
+let multi_line_comment = ("/*" [^("*/")]* "*/")
 
 let whitespace =
   (['\t' '\n' '\r' ' ']+) | (['\t' '\n' '\r']* ((single_line_comment | multi_line_comment) ['\t' '\n' '\r']*)+)

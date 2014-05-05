@@ -243,16 +243,6 @@ attribute:
   }
 ;
 
-inherit_rule:
-    /* empty */ { false }
-  | INHERIT { true }
-;
-
-read_only:
-    /* empty */ { false }
-  | READONLY { true }
-;
-
 operation:
   qualifiers operation_rest {
     { $2 with qualifiers = $1 }
@@ -283,12 +273,10 @@ operation_rest:
 ;
 
 %inline plist(X):
-  args = delimited(LRBRACKET, separated_list(COMMA, X), RRBRACKET) { args }
+  a=delimited(LRBRACKET, separated_list(COMMA, X), RRBRACKET) { a }
 
 argument:
-  extended_attribute_list optional_or_required_argument {
-    ($1, $2)
-  }
+  a=pair(extended_attribute_list, optional_or_required_argument) {a}
 ;
 
 optional_or_required_argument:
@@ -317,19 +305,13 @@ exception_member:
 ;
 
 exception_field:
-  type_rule IDENTIFIER SEMI {
-    { identifier = $2; exception_type = $1 }
+  t=type_rule n=IDENTIFIER SEMI {
+    { identifier = n; exception_type = t }
   }
 ;
 
 extended_attribute_list:
-    /* empty */ { [] }
-  | LSBRACKET extended_attribute extended_attributes RSBRACKET { [] }
-;
-
-extended_attributes:
-    /* empty */ { [] }
-  | COMMA extended_attribute extended_attributes { $2 :: $3 }
+  a=delimited(LSBRACKET, separated_list(COMMA, extended_attribute), RSBRACKET) { [] }
 ;
 
 extended_attribute:
