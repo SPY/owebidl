@@ -8,8 +8,7 @@ lexer:
 ast:
 	ocamlfind ocamlc -syntax camlp4o -package sexplib.syntax -c -w -30 src/ast.ml
 
-$PARSER_GENERATOR=menhir --infer
-#$PARSER_GENERATOR=ocamlyacc
+$PARSER_GENERATOR=menhir --infer --trace --error-recovery
 
 parser: ast
 	cd src && \
@@ -23,4 +22,4 @@ binary:
 	ocamlfind ocamlc -package sexplib -linkpkg -o ../bin/webidl ast.cmo lexer.cmo parser.cmo webidl.cmo
 
 run:
-	OCAMLRUNPARAM='p' ./bin/webidl
+	./bin/webidl

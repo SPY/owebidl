@@ -53,6 +53,11 @@ let keyword_table =
     "static", STATIC;
   ]
 
+let make_identifier str =
+  if str.[0] = '_'
+  then String.sub str 1 (String.length str - 1)
+  else str
+
 }
 
 
@@ -81,7 +86,7 @@ let string = '"' ([^ '"']* as str) '"'
 let other = [^ '\t' '\n' '\r' '0'-'9' 'A'-'Z' 'a'-'z']
 
 let single_line_comment = "//" [^'\n']* '\n'
-let multi_line_comment = ("/*" [^("*/")]* "*/")
+let multi_line_comment = "/*" (([^'*']* '*')*)? '/'
 
 let whitespace =
   (['\t' '\n' '\r' ' ']+) | (['\t' '\n' '\r']* ((single_line_comment | multi_line_comment) ['\t' '\n' '\r']*)+)
@@ -92,7 +97,7 @@ rule token = parse
   | whitespace { token lexbuf }
   | identifier {
         try Hashtbl.find keyword_table ident_str
-        with Not_found -> IDENTIFIER ident_str
+        with Not_found -> IDENTIFIER (make_identifier ident_str)
       }
   | string { STRING str }
   | '{' { LBRACE }

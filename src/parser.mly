@@ -311,7 +311,7 @@ exception_field:
 ;
 
 extended_attribute_list:
-  a=delimited(LSBRACKET, separated_list(COMMA, extended_attribute), RSBRACKET) { [] }
+  delimited(LSBRACKET, separated_list(COMMA, extended_attribute), RSBRACKET) { [] }
 ;
 
 extended_attribute:
