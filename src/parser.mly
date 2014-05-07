@@ -311,14 +311,14 @@ exception_field:
 ;
 
 extended_attribute_list:
-  delimited(LSBRACKET, separated_list(COMMA, extended_attribute), RSBRACKET) { [] }
+  a=loption(delimited(LSBRACKET, separated_list(COMMA, extended_attribute), RSBRACKET)) { a }
 ;
 
 extended_attribute:
-  | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_rest {}
-  | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_rest {}
-  | LBRACE extended_attribute_inner RBRACE extended_attribute_rest {}
-  | other extended_attribute_rest {}
+  | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_rest { AttributeDummy }
+  | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_rest { AttributeDummy }
+  | LBRACE extended_attribute_inner RBRACE extended_attribute_rest {AttributeDummy }
+  | other extended_attribute_rest { AttributeDummy }
 ;
 
 extended_attribute_rest:
