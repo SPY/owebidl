@@ -51,6 +51,8 @@ let keyword_table =
     "void", VOID;
     "unrestricted", UNRESTRICTED;
     "static", STATIC;
+    "Constructor", CONSTRUCTOR;
+    "NamedConstructor", NAMED_CONSTRUCTOR
   ]
 
 let make_identifier str =

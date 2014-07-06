@@ -6,7 +6,11 @@ and full_definition =
   extended_attribute list * definition
 
 and extended_attribute =
-  AttributeDummy
+  | Constructor of arguments
+  | NamedConstructor of string * arguments
+  | SingleIdentifier of string
+  | KeyValueAttribute of string * string
+  | OtherAttribute of string list
 
 and definition =
   | Callback of callback
@@ -23,8 +27,11 @@ and definition =
 and callback = {
   identifier: string;
   return_type: return_type;
-  arguments: (extended_attribute list * argument) list;
+  arguments: arguments;
 }
+
+and arguments =
+  (extended_attribute list * argument) list
 
 and argument =
   | OptionalArgument of optional_argument

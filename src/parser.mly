@@ -69,6 +69,8 @@ open Ast
 %token VOID
 %token UNRESTRICTED
 %token STATIC
+%token CONSTRUCTOR
+%token NAMED_CONSTRUCTOR
 
 %start definitions
 %type <Ast.definitions> definitions
@@ -315,61 +317,67 @@ extended_attribute_list:
 ;
 
 extended_attribute:
-  | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_rest { AttributeDummy }
+  | CONSTRUCTOR a=loption(plist(argument)) { Constructor a }
+  | NAMED_CONSTRUCTOR EQUAL i=IDENTIFIER a=loption(plist(argument)) { NamedConstructor (i, a) }
+  | i=IDENTIFIER EQUAL o=other { KeyValueAttribute (i, o) }
+  | i=IDENTIFIER { SingleIdentifier i }
+  | o=list(other) { OtherAttribute o }
+ /* | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_rest { AttributeDummy }
   | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_rest { AttributeDummy }
   | LBRACE extended_attribute_inner RBRACE extended_attribute_rest {AttributeDummy }
-  | other extended_attribute_rest { AttributeDummy }
+  | other extended_attribute_rest { AttributeDummy } */
 ;
 
+/*
 extended_attribute_rest:
-    /* empty */ { }
+  | { }
   | extended_attribute {}
 ;
 
 extended_attribute_inner:
-    /* empty */ { [] }
+  | { [] }
   | LRBRACKET extended_attribute_inner RRBRACKET extended_attribute_inner { [] }
   | LSBRACKET extended_attribute_inner RSBRACKET extended_attribute_inner { [] }
   | LBRACE extended_attribute_inner RBRACE extended_attribute_inner { [] }
   | other_or_comma extended_attribute_inner { [] }
 ; 
-
+*/
 other:
-    INTEGER {}
-  | FLOAT {}
-  | IDENTIFIER {}
-  | STRING {}
-  | OTHER {}
-  | MINUS {}
-  | DOT {}
-  | COLON {}
-  | SEMI {}
-  | LESS {}
-  | EQUAL {}
-  | GREATER {}
-  | QUESTION {}
-  | DATE {}
-  | DOMSTRING {}
-  | INFINITY {}
-  | NAN {}
-  | ANY {}
-  | BOOLEAN {}
-  | BYTE {}
-  | DOUBLE {}
-  | FALSE {}
-  | FLOAT_TYPE {}
-  | LONG {}
-  | NULL {}
-  | OBJECT {}
-  | OCTET {}
-  | OR {}
-  | OPTIONAL {}
-  | SEQUENCE {}
-  | SHORT {}
-  | TRUE {}
-  | UNSIGNED {}
-  | VOID {}
-  | argument_name_keyword {}
+  | i=INTEGER { string_of_int i }
+  | f=FLOAT { string_of_float f }
+  | i=IDENTIFIER { i }
+  | s=STRING { s }
+  | OTHER { "" }
+  | MINUS { "-" }
+  | DOT { "." }
+  | COLON { ":" }
+  | SEMI { "," }
+  | LESS { "<" }
+  | EQUAL { "=" }
+  | GREATER { ">" }
+  | QUESTION { "?" }
+  | DATE { "Date" }
+  | DOMSTRING { "DOMString" }
+  | INFINITY { "Infinity" }
+  | NAN { "NaN" }
+  | ANY { "any" }
+  | BOOLEAN { "boolean" }
+  | BYTE { "byte" }
+  | DOUBLE { "double" }
+  | FALSE { "false" }
+  | FLOAT_TYPE { "float" }
+  | LONG { "long" }
+  | NULL { "null" }
+  | OBJECT { "object" }
+  | OCTET { "octet" }
+  | OR { "or" }
+  | OPTIONAL { "optional" }
+  | SEQUENCE { "sequence" }
+  | SHORT { "short" }
+  | TRUE { "true" }
+  | UNSIGNED { "unsigned" }
+  | VOID { "void" }
+  | a=argument_name_keyword { a }
 ;
 
 %inline argument_name_keyword:
@@ -394,10 +402,12 @@ other:
   | UNRESTRICTED { "unrestricted" }
 ;
 
+/*
 other_or_comma:
     other {}
   | COMMA {}
 ;
+*/
 
 type_rule:
     single_type { $1 }
