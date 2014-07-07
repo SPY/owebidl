@@ -1,17 +1,23 @@
-module Sexp = Sexplib.Sexp
+
 
 let with_file filename ~f =
   let ic = open_in filename in
   let _ = f ic in
   close_in ic
 
+let out_definitions_count (definitions:Ast.definitions) =
+  print_endline ("Definitions amount: " ^ (string_of_int (List.length definitions)))
+
 let parse filename =
   with_file filename ~f:(fun ic ->
     let lexbuf = Lexing.from_channel ic in
     try
       let result = Parser.definitions Lexer.token lexbuf in
+      out_definitions_count result;
+      (* Generator.generate result *)
+      (* let module Sexp = Sexplib.Sexp in
       let str = Sexp.to_string (Ast.sexp_of_definitions result) in
-      print_endline str
+      print_endline str *)
     with exn ->
       begin
 	let open Lexing in

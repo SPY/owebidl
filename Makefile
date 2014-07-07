@@ -8,7 +8,7 @@ lexer:
 ast:
 	ocamlfind ocamlc -syntax camlp4o -package sexplib.syntax -c -w -30 src/ast.ml
 
-$PARSER_GENERATOR=menhir --infer --error-recovery
+$PARSER_GENERATOR=menhir --infer --error-recovery --trace
 
 parser: ast
 	cd src && \
@@ -18,8 +18,9 @@ parser: ast
 
 binary:
 	cd src && \
+	ocamlfind ocamlc -package sexplib -c generator.ml && \
 	ocamlfind ocamlc -package sexplib -c webidl.ml && \
-	ocamlfind ocamlc -package sexplib -linkpkg -o ../bin/webidl ast.cmo lexer.cmo parser.cmo webidl.cmo
+	ocamlfind ocamlc -package sexplib -linkpkg -o ../bin/webidl ast.cmo lexer.cmo parser.cmo generator.cmo webidl.cmo
 
 run:
 	./bin/webidl -f tests/simpl.idl
